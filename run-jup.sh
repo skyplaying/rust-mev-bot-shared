@@ -33,7 +33,7 @@ log_debug() {
 # 清理函数
 cleanup_and_exit() {
     # 传入 true 参数以保留监控进程
-    kill_process_by_name "jupiter-swap-api"
+    kill_process_by_name "metis-binary"
     rm -f .jupiter_running
     exit 0
 }
@@ -66,8 +66,8 @@ trap cleanup_and_exit SIGINT SIGTERM SIGHUP
 ulimit -n 100000
 
 # 检查Jupiter API程序是否存在
-if [ ! -f "$SCRIPT_DIR/jupiter-swap-api" ]; then
-    log_error "未找到jupiter-swap-api文件！"
+if [ ! -f "$SCRIPT_DIR/metis-binary" ]; then
+    log_error "未找到metis-binary文件！"
     exit 1
 fi
 
@@ -76,7 +76,7 @@ LOCAL_JUPITER_PORT=${LOCAL_JUPITER_PORT:-18080}
 
 # 生成 Jupiter 启动命令
 generate_jupiter_command() {
-    local cmd="RUST_LOG=info ./jupiter-swap-api"
+    local cmd="RUST_LOG=info ./metis-binary"
     # 从 config.yaml 读取配置
     local rpc_url=$(yq -r '.rpc_url // ""' config.yaml)
     local yellowstone_url=$(yq -r '.yellowstone_grpc_url // ""' config.yaml)
@@ -96,13 +96,14 @@ generate_jupiter_command() {
 
     # 构建命令
     cmd+=" --rpc-url $rpc_url"
-    cmd+=" --market-cache https://cache.jup.ag/markets?v=4"
-    cmd+=" --market-mode $market_mode"
+    #cmd+=" --market-cache https://cache.jup.ag/markets?v=4"
+    #cmd+=" --market-mode $market_mode"
     cmd+=" --port $port"
     cmd+=" --host $host"
     cmd+=" --allow-circular-arbitrage"
     cmd+=" --enable-new-dexes"
     cmd+=" --expose-quote-and-simulate"
+    cmd+="  --binary-key 7af66ef8-52e9-4667-8e86-fe917d776403"
 	# 启动健康检查
 	cmd+=" --enable-markets --enable-tokens"
 	cmd+=" --metrics-port 18081"
@@ -150,7 +151,7 @@ start_jupiter_service() {
     sleep 5
     
     # 获取进程 PID
-    local pid=$(pgrep -f "jupiter-swap-api")
+    local pid=$(pgrep -f "metis-binary")
     if [ -n "$pid" ]; then
         echo $pid >jupiter.pid
         log_info "Jupiter 服务启动成功 (进程 PID: $pid)"
